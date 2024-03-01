@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Where's Waldo MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <main class="px-4 py-4">
+      <h1 class="text-5xl mb-4">Where's Waldo MVP</h1>
+      <p class="mb-2">
+        Note a region is an array that represents the rectangular area's 4
+        corner positions in order of
+        <br />top-left, top-right, <br />
+        bot-left, bot-right
+        <br />
+        where each element is a coordinate (x, y).
+      </p>
+      <h2 class="text-2xl">Original Stats</h2>
+      <div id="original-stats-content" class="mb-2 whitespace-pre"></div>
+      <h2 class="text-2xl">Current Stats</h2>
+      <div id="current-stats-content" class="mb-2 whitespace-pre"></div>
+      <div id="image-container" class="relative">
+        <img src="./wheres-waldo-image.png" alt="image" class="absolute" />
+        <div
+          id="target-box"
+          class="absolute w-10 h-10 border-4 border-slate-800"
+        ></div>
+        <img
+          src="./wheres-waldo-image.png"
+          alt="image"
+          id="image"
+          class="absolute opacity-0"
+        />
+      </div>
+    </main>
+    <script defer src="app.js"></script>
+  </body>
+</html>
