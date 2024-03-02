@@ -1,7 +1,67 @@
 // query selectors
 const image = document.querySelector("#image");
+const imageDisplayed = document.querySelector("#image-displayed");
 const originalStatsContent = document.querySelector("#original-stats-content");
 const currentStatsContent = document.querySelector("#current-stats-content");
+const targetBox = document.querySelector("#target-box");
+const targetBoxOptions = document.querySelector("#target-box-options");
+
+const useTimer = function () {
+  let _startTime;
+  let _endTime;
+  let _intervalId;
+
+  const startTime = function () {
+    return _startTime;
+  };
+
+  const setStartTime = function (dateInMS) {
+    _startTime = dateInMS;
+  };
+
+  const endTime = function () {
+    return _endTime;
+  };
+
+  const setEndTime = function (dateInMS) {
+    _endTime = dateInMS;
+  };
+
+  const elapsedTimeInS = function () {
+    if (!_startTime) return 0;
+    if (!_endTime) return (Date.now() - _startTime) / 1000;
+    return (_endTime - _startTime) / 1000;
+  };
+
+  const startTimer = function (callbackFn) {
+    _endTime = null;
+    if (!_startTime) _startTime = Date.now();
+    _intervalId = setInterval(callbackFn, 1000);
+  };
+
+  const stopTimer = function () {
+    _endTime = Date.now();
+    clearInterval(_intervalId);
+    _intervalId = Math.NEGATIVE_INFINITY;
+  };
+
+  const resetTimer = function () {
+    _startTime = null;
+    _endTime = null;
+    _intervalId = Math.NEGATIVE_INFINITY;
+  };
+
+  return {
+    startTime,
+    setStartTime,
+    endTime,
+    setEndTime,
+    elapsedTimeInS,
+    startTimer,
+    stopTimer,
+    resetTimer,
+  };
+};
 
 const scale = function (imageEl) {
   return (
@@ -54,6 +114,10 @@ const isPosInRectangle = function (pos, rectangleCorners) {
   return true;
 };
 
+const doTwoRectanglesOverlap = function (rectangle1Corners, rectangle2Corners) {
+  // TODO
+};
+
 const waldoRegion = [
   [733, 457], // top-left
   [767, 457], // top-right
@@ -90,6 +154,9 @@ const currentStats = {
   clickedPosition: "Clicked Position (in image): ?",
   scaledClickedPosition: "Scaled Clicked Position (in image): ?",
   didFindWaldo: "Found Waldo (point in area)? false",
+  startTime: "Start Time: ?",
+  endTime: "End Time: ?",
+  elapsedTime: "Elapsed Time: 0 seconds",
 };
 
 const renderCurrentStats = function () {
@@ -97,6 +164,30 @@ const renderCurrentStats = function () {
 };
 
 renderCurrentStats();
+
+const timer = useTimer();
+const { startTime, endTime, elapsedTimeInS, startTimer, stopTimer } = timer;
+
+const updateTimeStats = function () {
+  if (timer.endTime())
+    currentStats.endTime = `End Time: ${Date(timer.endTime())}`;
+  currentStats.elapsedTime = `Elapsed Time: ${elapsedTimeInS()} seconds`;
+  renderCurrentStats();
+};
+
+const updateTargetBoxPosition = function (event) {
+  const [x, y] = [event.offsetX, event.offsetY];
+  targetBox.style.top = `${y - 20}px`;
+  targetBox.style.left = `${x - 20}px`;
+  targetBox.style.opacity = 1;
+};
+
+const updateTargetBoxOptionsPosition = function (event) {
+  const [x, y] = [event.offsetX, event.offsetY];
+  targetBoxOptions.style.top = `${y + 20}px`;
+  targetBoxOptions.style.left = `${x - 20}px`;
+  targetBoxOptions.style.visibility = "visible";
+};
 
 const updateMousePosition = function (event) {
   if (event.type !== "mousemove") return;
@@ -119,10 +210,12 @@ const updateClickPosition = function (event) {
   currentStats.scaledClickedPosition = `Scaled Clicked Position (in image): (${Math.round(
     scaledPos[0]
   )}, ${Math.round(scaledPos[1])})`;
-  currentStats.didFindWaldo = `Found Waldo (point in area)? ${isPosInRectangle(
-    scaledPos,
-    waldoRegion
-  )}`;
+  isWaldoFound = isPosInRectangle(scaledPos, waldoRegion);
+  if (isWaldoFound && !endTime()) {
+    stopTimer();
+    currentStats.endTime = `End Time: ${Date(endTime())}`;
+  }
+  currentStats.didFindWaldo = `Found Waldo (point in area)? ${isWaldoFound}`;
   renderCurrentStats();
 };
 
@@ -141,7 +234,16 @@ const updateImgStats = function (event) {
   renderCurrentStats();
 };
 
+imageDisplayed.addEventListener("load", (e) => {
+  startTimer(updateTimeStats);
+  currentStats.startTime = `Start Time: ${Date(startTime())}`;
+  console.log("should be called only once");
+});
 image.addEventListener("mousemove", updateMousePosition);
-image.addEventListener("click", updateClickPosition);
+image.addEventListener("click", (e) => {
+  updateClickPosition(e);
+  updateTargetBoxPosition(e);
+  updateTargetBoxOptionsPosition(e);
+});
 window.addEventListener("load", updateImgStats);
 window.addEventListener("resize", updateImgStats);
